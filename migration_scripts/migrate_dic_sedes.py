@@ -4,10 +4,9 @@ import os
 import psycopg2
 from db_connections import get_postgres_connection
 
-def migrate_dic_especialidades():
+def migrate_dic_sedes():
     """
-    Puebla la tabla dic_especialidades en PostgreSQL desde el archivo
-    dic_especialidades_rows.csv.
+    Puebla la tabla dic_sedes en PostgreSQL desde el archivo dic_sedes_rows.csv.
     """
     postgres_conn = None
     
@@ -19,41 +18,35 @@ def migrate_dic_especialidades():
         pg_cursor = postgres_conn.cursor()
 
         # Cargar datos desde el CSV
-        print("Leyendo datos desde dic_especialidades_rows.csv...")
-        csv_path = os.path.join(os.path.dirname(__file__), '..', 'dic_especialidades_rows.csv')
+        print("Leyendo datos desde dic_sedes_rows.csv...")
+        csv_path = os.path.join(os.path.dirname(__file__), '..', 'dic_sedes_rows.csv')
         
         records_to_insert = []
         with open(csv_path, mode='r', encoding='utf-8') as infile:
             reader = csv.DictReader(infile)
             for row in reader:
-                id_carrera = int(row['id_carrera']) if row['id_carrera'] else None
-                
                 mapped_record = (
                     int(row['id']),
-                    id_carrera,
-                    row['nombre'],
-                    int(row['estado_especialidad'])
+                    row['nombre'] # Leer del CSV
                 )
                 records_to_insert.append(mapped_record)
         
-        print(f"Se encontraron {len(records_to_insert)} especialidades para insertar.")
+        print(f"Se encontraron {len(records_to_insert)} sedes para insertar.")
 
         # Insertar los registros en la tabla
         if records_to_insert:
-            print("Limpiando e insertando registros en dic_especialidades...")
-            pg_cursor.execute("TRUNCATE TABLE public.dic_especialidades RESTART IDENTITY CASCADE;")
+            print("Limpiando e insertando registros en dic_sedes...")
+            pg_cursor.execute("TRUNCATE TABLE public.dic_sedes RESTART IDENTITY CASCADE;")
             
-            insert_query = """
-                INSERT INTO dic_especialidades (id, id_carrera, nombre, estado_especialidad) 
-                VALUES (%s, %s, %s, %s)
-            """
+            # Usar el nombre de columna correcto de la BD
+            insert_query = "INSERT INTO dic_sedes (id, nombre) VALUES (%s, %s)"
             pg_cursor.executemany(insert_query, records_to_insert)
             
             postgres_conn.commit()
-            print("Migración de dic_especialidades completada.")
+            print("Migración de dic_sedes completada.")
 
     except (Exception, psycopg2.Error) as e:
-        print(f"Error durante la migración de dic_especialidades: {e}")
+        print(f"Error durante la migración de dic_sedes: {e}")
         if postgres_conn:
             postgres_conn.rollback()
         raise e

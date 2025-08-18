@@ -1,8 +1,12 @@
 import psycopg2
 from db_connections import get_postgres_connection
 
-# Importar todas las funciones de migración
-from tbl_usuarios import migrate_tbl_usuarios
+# Importar las funciones de migración
+from migrate_docentes_with_placeholders import migrate_docentes_with_placeholders
+from migrate_tesistas_deduplicated import migrate_tesistas_deduplicated
+from migrate_estructura_academica import migrate_estructura_academica
+from populate_tbl_docentes import populate_tbl_docentes
+from populate_tbl_tesistas import populate_tbl_tesistas
 from dic_areas_ocde import migrate_dic_areas_ocde
 from dic_subareas_ocde import migrate_dic_subareas_ocde
 from dic_facultades import migrate_dic_facultades
@@ -10,7 +14,14 @@ from dic_categoria import migrate_dic_categoria
 from dic_lineas_universidad import migrate_dic_lineas_universidad
 from dic_carreras import migrate_dic_carreras
 from dic_especialidades import migrate_dic_especialidades
-from tbl_docentes import migrate_tbl_docentes # Nuevo
+from migrate_dic_sedes import migrate_dic_sedes
+from migrate_dic_disciplinas import migrate_dic_disciplinas
+from migrate_tbl_sublineas_vri import migrate_tbl_sublineas_vri
+from migrate_dic_denominaciones import migrate_dic_denominaciones
+from migrate_dic_etapas import migrate_dic_etapas
+from migrate_dic_modalidades import migrate_dic_modalidades
+from migrate_dic_tipo_trabajos import migrate_dic_tipo_trabajos
+from migrate_tbl_tramites import migrate_tbl_tramites
 
 def clean_destination_tables():
     """
@@ -26,15 +37,25 @@ def clean_destination_tables():
         cur = conn.cursor()
         
         tables_to_clean = [
-            "tbl_docentes", # Nuevo
+            "tbl_tramites",
+            "tbl_sublineas_vri",
+            "dic_disciplinas",
+            "tbl_tesistas",
+            "tbl_docentes",
             "tbl_usuarios",
+            "tbl_estructura_academica",
+            "dic_sedes",
             "dic_especialidades",
             "dic_carreras",
             "dic_facultades",
             "dic_subareas_ocde",
             "dic_areas_ocde",
             "dic_categoria",
-            "dic_lineas_universidad"
+            "dic_lineas_universidad",
+            "dic_denominaciones",
+            "dic_etapas",
+            "dic_modalidades",
+            "dic_tipo_trabajos"
         ]
         
         for table in reversed(tables_to_clean):
@@ -56,13 +77,13 @@ def clean_destination_tables():
 
 def run_all_migrations():
     """
-    Ejecuta todas las migraciones en un orden específico para satisfacer
-    las restricciones de clave foránea.
+    Ejecuta todas las migraciones en un orden específico.
     """
     print("\n--- Iniciando el proceso de migración completo ---")
     
     migrations = [
-        ("tbl_usuarios", migrate_tbl_usuarios),
+        ("migrate_docentes_with_placeholders", migrate_docentes_with_placeholders),
+        ("migrate_tesistas_deduplicated", migrate_tesistas_deduplicated),
         ("dic_areas_ocde", migrate_dic_areas_ocde),
         ("dic_subareas_ocde", migrate_dic_subareas_ocde),
         ("dic_facultades", migrate_dic_facultades),
@@ -70,7 +91,17 @@ def run_all_migrations():
         ("dic_lineas_universidad", migrate_dic_lineas_universidad),
         ("dic_carreras", migrate_dic_carreras),
         ("dic_especialidades", migrate_dic_especialidades),
-        ("tbl_docentes", migrate_tbl_docentes), # Nuevo
+        ("migrate_dic_sedes", migrate_dic_sedes),
+        ("migrate_dic_disciplinas", migrate_dic_disciplinas),
+        ("migrate_estructura_academica", migrate_estructura_academica),
+        ("migrate_dic_denominaciones", migrate_dic_denominaciones),
+        ("migrate_dic_etapas", migrate_dic_etapas),
+        ("migrate_dic_modalidades", migrate_dic_modalidades),
+        ("migrate_dic_tipo_trabajos", migrate_dic_tipo_trabajos),
+        ("populate_tbl_docentes", populate_tbl_docentes),
+        ("populate_tbl_tesistas", populate_tbl_tesistas),
+        ("migrate_tbl_sublineas_vri", migrate_tbl_sublineas_vri),
+        ("migrate_tbl_tramites", migrate_tbl_tramites),
     ]
 
     for name, migrate_function in migrations:
