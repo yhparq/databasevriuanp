@@ -84,3 +84,7 @@ def get_postgres_connection():
 #     except (psycopg2.Error, ValueError) as err:
 #         print(f"Error al conectar a PostgreSQL (Supabase): {err}")
 #         return None
+
+
+
+
