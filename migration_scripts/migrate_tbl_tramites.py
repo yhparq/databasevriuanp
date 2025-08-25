@@ -23,8 +23,21 @@ def migrate_tbl_tramites():
 
         # Mapa de remapeo para el campo Estado -> id_etapa
         etapa_map = {
-            1: 1, 3: 2, 4: 3, 5: 4, 6: 5, 7: 6, 8: 10,
-            9: 11, 11: 12, 12: 13, 14: 14
+            0: 1,  # Estado 0 ahora es etapa 1 (según solicitado)
+            1: 1,
+            2: 2,  # Estado 2 ahora es etapa 2 (según solicitado)
+            3: 2,
+            4: 3,
+            5: 4,
+            6: 5,
+            7: 6,
+            8: 10,
+            9: 11,
+            10: 10, # Estado 10 ahora es etapa 10 (según solicitado)
+            11: 12,
+            12: 13,
+            13: 13, # Estado 13 ahora es etapa 13 (según solicitado)
+            14: 14
         }
 
         mysql_cursor.execute("SELECT * FROM tesTramites")

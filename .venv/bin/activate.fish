@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV /home/yhparq/Documents/vriunap/database/.venv
+set -gx VIRTUAL_ENV /home/nachi/Documents/vriunap/databasevriuanp/.venv
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH

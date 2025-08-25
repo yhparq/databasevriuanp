@@ -1,0 +1,11 @@
+id,descripcion,id_etapa
+1,Corrección de proyecto de tesis pendiente,6
+2,Corrección de proyecto de tesis finalizada,6
+3,Proyecto de tesis aprobado,7
+4,Proyecto de tesis aprobado con observaciones,7
+6,Proyecto de tesis rechazado,7
+7,Corrección de borrador de tesis pendiente,12
+8,Corrección de borrador de tesis finalizada,12
+9,Tesis final aprobada,15
+10,Tesis final rechazada,15
+11,Tesis final aprobada con honores,15
