@@ -22,6 +22,20 @@ from migrate_dic_etapas import migrate_dic_etapas
 from migrate_dic_modalidades import migrate_dic_modalidades
 from migrate_dic_tipo_trabajos import migrate_dic_tipo_trabajos
 from migrate_tbl_tramites import migrate_tbl_tramites
+from migrate_dic_acciones import migrate_dic_acciones
+from migrate_dic_servicios import migrate_dic_servicios
+from migrate_dic_tipo_archivo import migrate_dic_tipo_archivo
+from migrate_dic_visto_bueno import migrate_dic_visto_bueno
+from migrate_dic_universidades import migrate_dic_universidades
+from migrate_dic_nivel_admins import migrate_dic_nivel_admins
+from migrate_dic_orden_jurado import migrate_dic_orden_jurado
+from migrate_docente_categoria_historial import migrate_docente_categoria_historial
+from migrate_dic_grados_academicos import migrate_dic_grados_academicos
+from migrate_dic_obtencion_studios import migrate_dic_obtencion_studios
+from migrate_tbl_estudios import migrate_tbl_estudios
+from populate_tbl_grado_docente import populate_tbl_grado_docente
+
+from migrate_dic_tipoevento_jurado import migrate_dic_tipoevento_jurado
 
 def clean_destination_tables():
     """
@@ -37,6 +51,9 @@ def clean_destination_tables():
         cur = conn.cursor()
         
         tables_to_clean = [
+            "tbl_grado_docente",
+            "tbl_estudios",
+            "tbl_docente_categoria_historial",
             "tbl_tramites",
             "tbl_sublineas_vri",
             "dic_disciplinas",
@@ -55,7 +72,13 @@ def clean_destination_tables():
             "dic_denominaciones",
             "dic_etapas",
             "dic_modalidades",
-            "dic_tipo_trabajos"
+            "dic_tipo_trabajos",
+            "dic_universidades",
+            "dic_nivel_admins",
+            "dic_orden_jurado",
+            "dic_tipoevento_jurado",
+            "dic_grados_academicos",
+            "dic_obtencion_studios"
         ]
         
         for table in reversed(tables_to_clean):
@@ -99,9 +122,22 @@ def run_all_migrations():
         ("migrate_dic_modalidades", migrate_dic_modalidades),
         ("migrate_dic_tipo_trabajos", migrate_dic_tipo_trabajos),
         ("populate_tbl_docentes", populate_tbl_docentes),
+        ("migrate_docente_categoria_historial", migrate_docente_categoria_historial),
         ("populate_tbl_tesistas", populate_tbl_tesistas),
         ("migrate_tbl_sublineas_vri", migrate_tbl_sublineas_vri),
         ("migrate_tbl_tramites", migrate_tbl_tramites),
+        ("migrate_dic_acciones", migrate_dic_acciones),
+        ("migrate_dic_servicios", migrate_dic_servicios),
+        ("migrate_dic_tipo_archivo", migrate_dic_tipo_archivo),
+        ("migrate_dic_visto_bueno", migrate_dic_visto_bueno),
+        ("migrate_dic_universidades", migrate_dic_universidades),
+        ("migrate_dic_nivel_admins", migrate_dic_nivel_admins),
+        ("migrate_dic_orden_jurado", migrate_dic_orden_jurado),
+        ("migrate_dic_tipoevento_jurado", migrate_dic_tipoevento_jurado),
+        ("migrate_dic_grados_academicos", migrate_dic_grados_academicos),
+        ("migrate_dic_obtencion_studios", migrate_dic_obtencion_studios),
+        ("migrate_tbl_estudios", migrate_tbl_estudios),
+        ("populate_tbl_grado_docente", populate_tbl_grado_docente),
     ]
 
     for name, migrate_function in migrations:

@@ -6,6 +6,11 @@
 
 import mysql.connector
 import psycopg2
+import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
 
 # --- Configuración de Conexiones ---
 
@@ -23,13 +28,10 @@ MYSQL_CONFIG_PILAR3 = {
     'database': 'vriunap_pilar3'
 }
 
-POSTGRES_CONFIG = {
-    'user': 'admin',
-    'password': 'admin123',
-    'host': 'localhost',
-    'port': '5432',
-    'database': 'postgres'
-}
+# --- Conexión a Supabase (Configuración Activa) ---
+# La configuración ahora se toma de la variable de entorno DATABASE_URL
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 
 # --- Funciones de Conexión ---
 
@@ -54,11 +56,13 @@ def get_mysql_pilar3_connection():
         return None
 
 def get_postgres_connection():
-    """Devuelve una conexión a la base de datos de PostgreSQL."""
+    """Devuelve una conexión a la base de datos de PostgreSQL usando DATABASE_URL."""
     try:
-        conn = psycopg2.connect(**POSTGRES_CONFIG)
-        print("Conexión exitosa a PostgreSQL.")
+        if not DATABASE_URL:
+            raise ValueError("La variable de entorno DATABASE_URL no está definida.")
+        conn = psycopg2.connect(DATABASE_URL)
+        print("Conexión exitosa a PostgreSQL (Supabase).")
         return conn
-    except psycopg2.Error as err:
-        print(f"Error al conectar a PostgreSQL: {err}")
+    except (psycopg2.Error, ValueError) as err:
+        print(f"Error al conectar a PostgreSQL (Supabase): {err}")
         return None
