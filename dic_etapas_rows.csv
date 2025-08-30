@@ -6,7 +6,7 @@ id,nombre,descripcion
 5,Sorteo de jurados,El sub/director de la unidad de investigación realiza el sorteo de jurados
 6,Proyecto en revisión,El proyecto se encuentra en revisión por parte de los jurados
 7,Dictamen de proyecto de investigación,El proyecto se encuentra en la etapa de dictamen por parte de los jurados
-8,Proyecto de tesis aprobado,El proyecto se encuentra aprobado
+8,Generación de acta de dictamen,Los jurados finalizaron su dictaminación y se generó el acta de dictamen
 9,Etapa de borrador de tesis habilitado,El tesista ha cargado los requisitos necesarios para iniciar la etapa de borrador de tesis
 10,Carga de borrador de tesis,El tesista carga el borrador de tesis
 11,Revisión de formato de borrador,El formato es revisado por Coordinación de Investigación

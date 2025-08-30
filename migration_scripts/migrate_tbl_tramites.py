@@ -22,22 +22,23 @@ def migrate_tbl_tramites():
         postgres_cursor = postgres_conn.cursor()
 
         # Mapa de remapeo para el campo Estado -> id_etapa
+        # La tabla de origen tiene estados de 0 a 14.
         etapa_map = {
-            0: 1,  # Estado 0 ahora es etapa 1 (según solicitado)
+            0: 1,   # Regla especial: Estado 0 se convierte en etapa 1
             1: 1,
-            2: 2,  # Estado 2 ahora es etapa 2 (según solicitado)
+            2: 2,   # Sin equivalente explícito, se mapea a sí mismo
             3: 2,
-            4: 3,
-            5: 4,
-            6: 5,
-            7: 6,
-            8: 10,
-            9: 11,
-            10: 10, # Estado 10 ahora es etapa 10 (según solicitado)
-            11: 12,
-            12: 13,
-            13: 13, # Estado 13 ahora es etapa 13 (según solicitado)
-            14: 14
+            4: 4,   # Sin equivalente explícito, se mapea a sí mismo
+            5: 3,
+            6: 4,
+            7: 5,
+            8: 8,   # Sin equivalente explícito, se mapea a sí mismo
+            9: 10,
+            10: 11,
+            11: 11,  # Sin equivalente explícito, se mapea a sí mismo
+            12: 12,
+            13: 13,
+            14: 14   # Sin equivalente explícito, se mapea a sí mismo
         }
 
         mysql_cursor.execute("SELECT * FROM tesTramites")

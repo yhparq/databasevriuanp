@@ -2,98 +2,82 @@
 import csv
 import os
 import psycopg2
-import mysql.connector
-from db_connections import get_mysql_absmain_connection, get_postgres_connection
+from db_connections import get_postgres_connection, get_mysql_absmain_connection
 
 def populate_tbl_docentes():
     """
-    Puebla la tabla tbl_docentes de PostgreSQL vinculando los docentes de MySQL
-    con los usuarios existentes en PostgreSQL mediante su nombre completo.
+    Puebla la tabla tbl_docentes en PostgreSQL a partir de tblDocentes en MySQL,
+    asegurándose de incluir el id_antiguo para el mapeo.
     """
-    postgres_conn = None
+    print("--- Poblando tbl_docentes (con id_antiguo) ---")
+    pg_conn = None
     mysql_conn = None
-    
     try:
-        postgres_conn = get_postgres_connection()
+        pg_conn = get_postgres_connection()
         mysql_conn = get_mysql_absmain_connection()
 
-        if not all([postgres_conn, mysql_conn]):
-            raise Exception("No se pudieron establecer todas las conexiones.")
+        if pg_conn is None or mysql_conn is None:
+            raise Exception("No se pudo conectar a una de las bases de datos.")
 
-        pg_cursor = postgres_conn.cursor()
-        mysql_cursor = mysql_conn.cursor(dictionary=True)
+        pg_cur = pg_conn.cursor()
+        mysql_cur = mysql_conn.cursor(dictionary=True)
 
-        # 1. Obtener todos los usuarios de PostgreSQL y crear un mapa de nombre a ID
-        print("Leyendo usuarios desde PostgreSQL para mapeo...")
-        pg_cursor.execute("SELECT id, lower(trim(nombres) || ' ' || trim(apellidos)) FROM tbl_usuarios")
-        user_map = {name: user_id for user_id, name in pg_cursor.fetchall()}
-        print(f"Se mapearon {len(user_map)} usuarios.")
+        # 1. Obtener mapeo de DNI a id_usuario nuevo de PostgreSQL
+        pg_cur.execute("SELECT id, num_doc_identidad FROM tbl_usuarios WHERE num_doc_identidad IS NOT NULL")
+        user_map = {row[1]: row[0] for row in pg_cur.fetchall()}
+        print(f"  Se mapearon {len(user_map)} usuarios desde PostgreSQL por DNI.")
 
-        # 2. Leer todos los docentes de la tabla original de MySQL
-        print("Leyendo docentes desde MySQL...")
-        mysql_cursor.execute("SELECT * FROM tblDocentes")
-        docentes_records = mysql_cursor.fetchall()
-        print(f"Se encontraron {len(docentes_records)} docentes para procesar.")
+        # 2. Leer docentes de MySQL
+        mysql_cur.execute("SELECT Id, DNI, IdCategoria, Codigo, IdEspecialidad, Estado FROM tblDocentes")
+        source_docentes = mysql_cur.fetchall()
+        print(f"  Se encontraron {len(source_docentes)} docentes en la tabla de origen.")
 
-        # 3. Vincular y preparar para la inserción
+        # 3. Preparar los datos para la inserción
         docentes_to_insert = []
-        docentes_no_vinculados = []
-
-        for docente in docentes_records:
-            nombres = docente.get('Nombres', '').strip().lower()
-            apellidos = docente.get('Apellidos', '').strip().lower()
-            full_name_key = f"{nombres} {apellidos}"
-
-            user_id = user_map.get(full_name_key)
-
-            if user_id:
-                # Mapeo de datos para la tabla tbl_docentes
-                mapped_docente = (
-                    docente.get('Id'),
-                    user_id,
-                    docente.get('IdCategoria'),
-                    docente.get('Codigo'),
-                    1,  # id_especialidad (valor por defecto)
-                    docente.get('Activo')
-                )
-                docentes_to_insert.append(mapped_docente)
+        unmapped_users = 0
+        for doc in source_docentes:
+            dni = doc['DNI']
+            id_usuario = user_map.get(dni)
+            
+            if id_usuario:
+                docentes_to_insert.append((
+                    id_usuario,
+                    doc['IdCategoria'],
+                    doc['Codigo'],
+                    doc['IdEspecialidad'],
+                    1 if doc['Estado'] == 'A' else 0,
+                    doc['Id']  # id_antiguo
+                ))
             else:
-                # Si no se encuentra el usuario, se guarda para el reporte
-                docentes_no_vinculados.append(docente)
+                unmapped_users += 1
+        
+        print(f"  Se prepararon {len(docentes_to_insert)} registros de docentes para insertar.")
+        if unmapped_users > 0:
+            print(f"  ADVERTENCIA: Se ignoraron {unmapped_users} docentes porque su DNI no fue encontrado en tbl_usuarios.")
 
-        # 4. Insertar los registros en tbl_docentes
+        # 4. Limpiar e insertar los datos en PostgreSQL
+        print("  Limpiando la tabla tbl_docentes...")
+        pg_cur.execute("TRUNCATE TABLE public.tbl_docentes RESTART IDENTITY CASCADE;")
+        
         if docentes_to_insert:
-            print(f"\nInsertando {len(docentes_to_insert)} registros en tbl_docentes...")
-            # Antes de insertar, es buena práctica limpiar la tabla
-            print("Limpiando la tabla tbl_docentes...")
-            pg_cursor.execute("TRUNCATE TABLE public.tbl_docentes RESTART IDENTITY CASCADE;")
-            
             insert_query = """
-                INSERT INTO tbl_docentes (id, id_usuario, id_categoria, codigo_airhs, id_especialidad, estado_docente) 
-                VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO tbl_docentes (
+                id_usuario, id_categoria, codigo_airhs, id_especialidad, estado_docente, id_antiguo
+            ) VALUES (%s, %s, %s, %s, %s, %s)
             """
-            pg_cursor.executemany(insert_query, docentes_to_insert)
-            postgres_conn.commit()
-            print("Poblado de tbl_docentes completado.")
+            pg_cur.executemany(insert_query, docentes_to_insert)
+            pg_conn.commit()
+            print(f"  Se insertaron {len(docentes_to_insert)} registros en tbl_docentes.")
 
-        # 5. Exportar los no vinculados a un CSV
-        if docentes_no_vinculados:
-            report_path = os.path.join(os.path.dirname(__file__), '..', 'docentes_no_vinculados.csv')
-            print(f"\nExportando {len(docentes_no_vinculados)} docentes no vinculados a: {report_path}")
-            
-            with open(report_path, 'w', newline='', encoding='utf-8') as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=docentes_no_vinculados[0].keys())
-                writer.writeheader()
-                writer.writerows(docentes_no_vinculados)
-            print("Reporte de docentes no vinculados creado.")
+        print("--- Poblado de tbl_docentes completado. ---")
 
-    except (Exception, psycopg2.Error, mysql.connector.Error) as e:
-        print(f"Error durante el poblado de tbl_docentes: {e}")
-        if postgres_conn:
-            postgres_conn.rollback()
-        raise e
+    except Exception as e:
+        print(f"  ERROR CRÍTICO durante el poblado de tbl_docentes: {e}")
+        if pg_conn:
+            pg_conn.rollback()
     finally:
-        if postgres_conn:
-            postgres_conn.close()
-        if mysql_conn:
-            mysql_conn.close()
+        if pg_conn: pg_conn.close()
+        if mysql_conn: mysql_conn.close()
+
+if __name__ == '__main__':
+    populate_tbl_docentes()
